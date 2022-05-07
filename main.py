@@ -47,6 +47,16 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces, duration:
         current_duration += 60*list_of_pieces[2][random_index] + list_of_pieces[3][random_index]
     return list_of_selected_pieces
 
+def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length: int):
+    list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
+    while len(list_of_selected_pieces[0]) != list_length:
+        random_index = random.randint(0, len(list_of_pieces[0]) - 1)
+        if list_of_pieces[0][random_index] in list_of_selected_pieces[0]:
+            continue
+        for list_category_number, list_category in enumerate(list_of_selected_pieces):
+            list_category.append(list_of_pieces[list_category_number][random_index])
+    return list_of_selected_pieces
+
 def print_selected_pieces(selected_pieces):
     number_of_pieces = len(selected_pieces[0])
     selected_pieces[0].append("PERFORMER/COMPOSER")
@@ -66,5 +76,7 @@ if __name__ == "__main__":
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
     list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set)
-    random_piano_pieces_group = select_random_subgroup_of_pieces(list_of_piano_pieces, 40)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(list_of_piano_pieces, 40)
+    print_selected_pieces(random_piano_pieces_group)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, 12)
     print_selected_pieces(random_piano_pieces_group)
