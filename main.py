@@ -34,7 +34,7 @@ def populate_list_of_pieces_from_selected_data(selected_data):
                 list_of_pieces[column_index].append(current_cell)
     return list_of_pieces
 
-def select_random_subgroup_of_pieces(list_of_pieces, duration: int):
+def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces, duration: int):
     current_duration = 0
     duration_in_seconds = duration*60
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
