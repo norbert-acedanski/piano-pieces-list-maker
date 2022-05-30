@@ -48,8 +48,9 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
         random_index = random.randint(0, current_length - 2)
         for index in range(4):
             list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
-            list_of_pieces_copy[index].remove(list_of_pieces_copy[index][random_index])
-        current_duration += 60*list_of_pieces_copy[2][random_index] + list_of_pieces_copy[3][random_index]
+            list_of_pieces_copy[index].pop(random_index)
+            pass
+        current_duration += 60*list_of_selected_pieces[2][-1] + list_of_selected_pieces[3][-1]
     return list_of_selected_pieces
 
 def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length: int):
@@ -62,7 +63,7 @@ def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length
         random_index = random.randint(0, current_length - 2)
         for index in range(4):
             list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
-            list_of_pieces_copy[index].remove(list_of_pieces_copy[index][random_index])
+            list_of_pieces_copy[index].pop(random_index)
     return list_of_selected_pieces
 
 def print_selected_pieces(selected_pieces):
