@@ -1,3 +1,5 @@
+import copy
+from typing import List
 import pandas
 import random
 
@@ -22,7 +24,7 @@ def select_data_from_subset(subset):
     third_data_set = subset[third_set]
     return [first_data_set, second_data_set, third_data_set]
 
-def populate_list_of_pieces_from_selected_data(selected_data):
+def populate_list_of_pieces_from_selected_data(selected_data) -> List[list]:
     list_of_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     for current_set in selected_data:
         break_row = 0
@@ -34,27 +36,33 @@ def populate_list_of_pieces_from_selected_data(selected_data):
                 list_of_pieces[column_index].append(current_cell)
     return list_of_pieces
 
-def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces, duration: int):
+def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list], duration: int) -> List[list]:
     current_duration = 0
     duration_in_seconds = duration*60
+    if duration_in_seconds > sum(list_of_pieces[2])*60 + sum(list_of_pieces[3]) - 120:
+        raise ValueError("Expected duration bigger, than the sum of all pieces in a list!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
+    list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while current_duration < duration_in_seconds:
-        random_index = random.randint(0, len(list_of_pieces[0]) - 1)
-        if list_of_pieces[0][random_index] in list_of_selected_pieces[0]:
-            continue
-        for list_category_number, list_category in enumerate(list_of_selected_pieces):
-            list_category.append(list_of_pieces[list_category_number][random_index])
-        current_duration += 60*list_of_pieces[2][random_index] + list_of_pieces[3][random_index]
+        current_length = len(list_of_pieces_copy[0])
+        random_index = random.randint(0, current_length - 2)
+        for index in range(4):
+            list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
+            list_of_pieces_copy[index].remove(list_of_pieces_copy[index][random_index])
+        current_duration += 60*list_of_pieces_copy[2][random_index] + list_of_pieces_copy[3][random_index]
     return list_of_selected_pieces
 
 def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length: int):
+    if list_length > len(list_of_pieces[0]):
+        raise ValueError("Expected number of pieces bigger, than the number of pieces in a list!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
+    list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while len(list_of_selected_pieces[0]) != list_length:
-        random_index = random.randint(0, len(list_of_pieces[0]) - 1)
-        if list_of_pieces[0][random_index] in list_of_selected_pieces[0]:
-            continue
-        for list_category_number, list_category in enumerate(list_of_selected_pieces):
-            list_category.append(list_of_pieces[list_category_number][random_index])
+        current_length = len(list_of_pieces_copy[0])
+        random_index = random.randint(0, current_length - 2)
+        for index in range(4):
+            list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
+            list_of_pieces_copy[index].remove(list_of_pieces_copy[index][random_index])
     return list_of_selected_pieces
 
 def print_selected_pieces(selected_pieces):
@@ -76,7 +84,7 @@ if __name__ == "__main__":
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
     list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(list_of_piano_pieces, 40)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(list_of_piano_pieces, 160)
     print_selected_pieces(random_piano_pieces_group)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, 12)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, 40)
     print_selected_pieces(random_piano_pieces_group)
