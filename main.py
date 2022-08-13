@@ -1,5 +1,5 @@
 import copy
-from typing import List
+from typing import List, Optional, Set, Tuple, Union
 import pandas
 import random
 
@@ -8,12 +8,15 @@ BEGINNING_OF_DATA_COLUMNS = 3
 OFFSET = 7
 NUMBER_OF_COLUMNS_TO_SAVE = 4
 
+
 def load_data(path):
     return pandas.ExcelFile(path)
 
+
 def select_subset_from_file(file):
-    all_pieces_data = pandas.read_excel(file, "Wszystkie utwory", header=None)
-    return all_pieces_data.iloc[4:, 1:].reset_index(drop=True)
+    all_pieces_data = pandas.read_excel(file, "Wszystkie utwory", header=None)  # Get all elements from "Wszystkie utwory" sheet
+    return all_pieces_data.iloc[4:, 1:].reset_index(drop=True)  # Dropping first 4 rows and first column
+
 
 def select_data_from_subset(subset):
     first_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS, BEGINNING_OF_DATA_COLUMNS + NUMBER_OF_COLUMNS_TO_SAVE)]
@@ -23,6 +26,7 @@ def select_data_from_subset(subset):
     second_data_set = subset[second_set]
     third_data_set = subset[third_set]
     return [first_data_set, second_data_set, third_data_set]
+
 
 def populate_list_of_pieces_from_selected_data(selected_data) -> List[list]:
     list_of_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
@@ -35,6 +39,53 @@ def populate_list_of_pieces_from_selected_data(selected_data) -> List[list]:
                     break
                 list_of_pieces[column_index].append(current_cell)
     return list_of_pieces
+
+
+def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None,
+                   with_titles: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None,
+                   longer_than: Optional[Union[int, float]] = None, shorter_than: Optional[Union[int, float]] = None):
+    if all(parameter is None for parameter in [from_composers, with_titles, longer_than, shorter_than]):
+        raise ValueError("Provide at least one optional argument!")
+    list_of_indexes = []
+    if from_composers is not None:
+        if not isinstance(from_composers, (str, list, tuple, set)):
+            raise ValueError(f"Wrong type of 'from_composers'! Expected str, List[str], Tuple[str], Set[str], got {type(from_composers)}")
+        if isinstance(from_composers, str):
+            from_composers = [from_composers]
+        for index, composer in enumerate(list_of_pieces[0]):
+            if composer in from_composers:
+                list_of_indexes.append(index)
+    if with_titles is not None:
+        if not isinstance(with_titles, (str, list, tuple, set)):
+            raise ValueError(f"Wrong type of 'with_titles'! Expected str, List[str], Tuple[str], Set[str], got {type(with_titles)}")
+        if isinstance(with_titles, str):
+            with_titles = [with_titles]
+        for index, title in enumerate(list_of_pieces[1]):
+            if title in with_titles:
+                list_of_indexes.append(index)
+    if longer_than is not None:
+        if not isinstance(longer_than, (int, float)):
+            raise ValueError(f"Wrong type of 'longer_than'! Expected int, float, got {type(longer_than)}")
+        if longer_than <= 0:
+            raise ValueError("Value of 'longer_than' should be larger than 0!")
+        for index, (minutes, seconds) in enumerate(zip(list_of_pieces[2], list_of_pieces[3])):
+            if minutes*60 + seconds > longer_than*60:
+                list_of_indexes.append(index)
+    if shorter_than is not None:
+        if not isinstance(shorter_than, (int, float)):
+            raise ValueError(f"Wrong type of 'shorter_than'! Expected int, float, got {type(shorter_than)}")
+        if shorter_than <= 0:
+            raise ValueError("Value of 'shorter_than' should be larger than 0!")
+        for index, (minutes, seconds) in enumerate(zip(list_of_pieces[2], list_of_pieces[3])):
+            if minutes*60 + seconds < shorter_than*60:
+                list_of_indexes.append(index)
+    excluded_pieces_list = copy.deepcopy(list_of_pieces)
+    indexes_list = sorted(set(list_of_indexes), reverse=True)
+    for index in indexes_list:
+        for sublist in excluded_pieces_list:
+            sublist.pop(index)
+    return excluded_pieces_list
+    
 
 def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list], duration: int) -> List[list]:
     current_duration = 0
@@ -53,7 +104,8 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
         current_duration += 60*list_of_selected_pieces[2][-1] + list_of_selected_pieces[3][-1]
     return list_of_selected_pieces
 
-def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length: int):
+
+def select_random_subgroup_of_pieces_based_on_length(list_of_pieces: List[list], list_length: int):
     if list_length > len(list_of_pieces[0]):
         raise ValueError("Expected number of pieces bigger, than the number of pieces in a list!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
@@ -66,7 +118,8 @@ def select_random_subgroup_of_pieces_based_on_length(list_of_pieces, list_length
             list_of_pieces_copy[index].pop(random_index)
     return list_of_selected_pieces
 
-def print_selected_pieces(selected_pieces):
+
+def print_selected_pieces(selected_pieces: List[list]):
     number_of_pieces = len(selected_pieces[0])
     selected_pieces[0].append("PERFORMER/COMPOSER")
     longest_composer_name_length = len(max(selected_pieces[0], key=len))
@@ -81,11 +134,14 @@ def print_selected_pieces(selected_pieces):
 
 
 if __name__ == "__main__":
+    excluded_piano_pieces = ["Mia & Seb's Theme", "Nokturn Op. 55 No. 1"]
+    excluded_composers = "Beethoven"
     entire_excel_data = load_data(path_to_excel_file)
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
     list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(list_of_piano_pieces, 160)
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=3*60 - 20)
     print_selected_pieces(random_piano_pieces_group)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, 40)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, list_length=40)
     print_selected_pieces(random_piano_pieces_group)
