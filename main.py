@@ -28,9 +28,17 @@ def select_data_from_subset(subset):
     return [first_data_set, second_data_set, third_data_set]
 
 
-def populate_list_of_pieces_from_selected_data(selected_data) -> List[list]:
+def populate_list_of_pieces_from_selected_data(selected_data, categories_not_loaded: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None) -> List[list]:
+    correlation_dict = {"Soundtracks": 0, "Songs": 1, "Classical": 2}
+    if not isinstance(categories_not_loaded, (str, list, tuple, set)) and categories_not_loaded is not None:
+        raise ValueError(f"Wrong type of 'categories_not_loaded'! Expected str, List[str], Tuple[str], Set[str], got {type(categories_not_loaded)}")
+    if isinstance(categories_not_loaded, str):
+        categories_not_loaded = [categories_not_loaded]
+    set_indexes_to_omit = [correlation_dict[category] for category in categories_not_loaded] if categories_not_loaded is not None else []
     list_of_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
-    for current_set in selected_data:
+    for current_set_index, current_set in enumerate(selected_data):
+        if current_set_index in set_indexes_to_omit:
+            break
         break_row = 0
         for column_index, column in enumerate(current_set):
             for current_cell_number, current_cell in enumerate(current_set[column]):
@@ -90,8 +98,8 @@ def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[st
 def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list], duration: int) -> List[list]:
     current_duration = 0
     duration_in_seconds = duration*60
-    if duration_in_seconds > sum(list_of_pieces[2])*60 + sum(list_of_pieces[3]) - 120:
-        raise ValueError("Expected duration bigger, than the sum of all pieces in a list!")
+    if duration_in_seconds > (list_sum := sum(list_of_pieces[2])*60 + sum(list_of_pieces[3])) - 120:
+        raise ValueError(f"Expected duration ({duration_in_seconds/60} min) bigger, than the sum of all pieces in a list - {list_sum/60} min!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while current_duration < duration_in_seconds:
@@ -107,7 +115,7 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
 
 def select_random_subgroup_of_pieces_based_on_length(list_of_pieces: List[list], list_length: int):
     if list_length > len(list_of_pieces[0]):
-        raise ValueError("Expected number of pieces bigger, than the number of pieces in a list!")
+        raise ValueError(f"Expected number of pieces ({list_length}) bigger, than the number of pieces in a list - {len(list_of_pieces[0])}!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while len(list_of_selected_pieces[0]) != list_length:
@@ -139,7 +147,7 @@ if __name__ == "__main__":
     entire_excel_data = load_data(path_to_excel_file)
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
-    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=None)
     shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
     random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=3*60 - 20)
     print_selected_pieces(random_piano_pieces_group)
