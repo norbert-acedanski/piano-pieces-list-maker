@@ -38,7 +38,7 @@ def populate_list_of_pieces_from_selected_data(selected_data, categories_not_loa
     list_of_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     for current_set_index, current_set in enumerate(selected_data):
         if current_set_index in set_indexes_to_omit:
-            break
+            continue
         break_row = 0
         for column_index, column in enumerate(current_set):
             for current_cell_number, current_cell in enumerate(current_set[column]):
@@ -93,6 +93,16 @@ def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[st
         for sublist in excluded_pieces_list:
             sublist.pop(index)
     return excluded_pieces_list
+
+
+def shuffle_subgroup_of_pieces(list_of_pieces: List[list]) -> List[list]:
+    random_indexes = list(range(len(list_of_pieces[0]) - 1))
+    random.shuffle(random_indexes)
+    shuffled_subgroup = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
+    for index in random_indexes:
+        for column in range(NUMBER_OF_COLUMNS_TO_SAVE):
+            shuffled_subgroup[column].append(list_of_pieces[column][index])
+    return shuffled_subgroup
     
 
 def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list], duration: int) -> List[list]:
@@ -120,7 +130,7 @@ def select_random_subgroup_of_pieces_based_on_length(list_of_pieces: List[list],
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while len(list_of_selected_pieces[0]) != list_length:
         current_length = len(list_of_pieces_copy[0])
-        random_index = random.randint(0, current_length - 2)
+        random_index = random.randint(0, current_length - 1)
         for index in range(4):
             list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
             list_of_pieces_copy[index].pop(random_index)
@@ -147,9 +157,15 @@ if __name__ == "__main__":
     entire_excel_data = load_data(path_to_excel_file)
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
-    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=None)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded="Soundtracks")
     shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=3*60 - 20)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=1*60)
     print_selected_pieces(random_piano_pieces_group)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(list_of_piano_pieces, list_length=40)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=["Soundtracks", "Songs"])
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
+    shuffled_pieces_group = shuffle_subgroup_of_pieces(shorter_set_of_pieces)
+    print_selected_pieces(shuffled_pieces_group)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=["Songs", "Classical"])
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(shorter_set_of_pieces, list_length=21)
     print_selected_pieces(random_piano_pieces_group)
