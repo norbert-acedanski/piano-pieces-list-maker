@@ -3,7 +3,6 @@ from typing import List, Optional, Set, Tuple, Union
 import pandas
 import random
 
-path_to_excel_file = "D:\\OneDrive\\Dokumenty\\`STATYSTYKI\\Pianino\\Utwory.xlsx"
 BEGINNING_OF_DATA_COLUMNS = 3
 OFFSET = 7
 NUMBER_OF_COLUMNS_TO_SAVE = 4
@@ -114,7 +113,10 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while current_duration < duration_in_seconds:
         current_length = len(list_of_pieces_copy[0])
-        random_index = random.randint(0, current_length - 2)
+        try:
+            random_index = random.randint(0, current_length - 2)
+        except ValueError:
+            raise ValueError("Expected duration to big!")
         for index in range(4):
             list_of_selected_pieces[index].append(list_of_pieces_copy[index][random_index])
             list_of_pieces_copy[index].pop(random_index)
@@ -154,18 +156,34 @@ def print_selected_pieces(selected_pieces: List[list]):
 if __name__ == "__main__":
     excluded_piano_pieces = ["Mia & Seb's Theme", "Nokturn Op. 55 No. 1"]
     excluded_composers = "Beethoven"
+    path_to_excel_file = "./piano_pieces_xlsx_file/Utwory.xlsx"
     entire_excel_data = load_data(path_to_excel_file)
     all_pieces_data = select_subset_from_file(entire_excel_data)
     entire_set = select_data_from_subset(all_pieces_data)
-    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded="Soundtracks")
-    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
-    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=1*60)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=None)
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers,
+                                           with_titles=excluded_piano_pieces)
+    number_of_hours = 3
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces,
+                                                                                   duration=number_of_hours*60 -
+                                                                                            (number_of_hours - 1)*10)
     print_selected_pieces(random_piano_pieces_group)
-    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=["Soundtracks", "Songs"])
-    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
+    random_piano_pieces_group = shuffle_subgroup_of_pieces(shorter_set_of_pieces)
+    print_selected_pieces(random_piano_pieces_group)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded="Soundtracks")
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers,
+                                           with_titles=excluded_piano_pieces)
+    random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_duration(shorter_set_of_pieces, duration=120)
+    print_selected_pieces(random_piano_pieces_group)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set,
+                                                                      categories_not_loaded=["Soundtracks", "Songs"])
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers,
+                                           with_titles=excluded_piano_pieces)
     shuffled_pieces_group = shuffle_subgroup_of_pieces(shorter_set_of_pieces)
     print_selected_pieces(shuffled_pieces_group)
-    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set, categories_not_loaded=["Songs", "Classical"])
-    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers, with_titles=excluded_piano_pieces)
+    list_of_piano_pieces = populate_list_of_pieces_from_selected_data(entire_set,
+                                                                      categories_not_loaded=["Songs", "Classical"])
+    shorter_set_of_pieces = exclude_pieces(list_of_piano_pieces, from_composers=excluded_composers,
+                                           with_titles=excluded_piano_pieces)
     random_piano_pieces_group = select_random_subgroup_of_pieces_based_on_length(shorter_set_of_pieces, list_length=21)
     print_selected_pieces(random_piano_pieces_group)
