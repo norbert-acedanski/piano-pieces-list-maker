@@ -18,22 +18,29 @@ def select_subset_from_file(file):
 
 
 def select_data_from_subset(subset):
-    first_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS, BEGINNING_OF_DATA_COLUMNS + NUMBER_OF_COLUMNS_TO_SAVE)]
-    second_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS + OFFSET, BEGINNING_OF_DATA_COLUMNS + OFFSET + NUMBER_OF_COLUMNS_TO_SAVE)]
-    third_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS + 2*OFFSET, BEGINNING_OF_DATA_COLUMNS + 2*OFFSET + NUMBER_OF_COLUMNS_TO_SAVE)]
+    first_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS, BEGINNING_OF_DATA_COLUMNS +
+                                            NUMBER_OF_COLUMNS_TO_SAVE)]
+    second_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS + OFFSET, BEGINNING_OF_DATA_COLUMNS + OFFSET +
+                                             NUMBER_OF_COLUMNS_TO_SAVE)]
+    third_set = [number for number in range(BEGINNING_OF_DATA_COLUMNS + 2*OFFSET, BEGINNING_OF_DATA_COLUMNS + 2*OFFSET +
+                                            NUMBER_OF_COLUMNS_TO_SAVE)]
     first_data_set = subset[first_set]
     second_data_set = subset[second_set]
     third_data_set = subset[third_set]
     return [first_data_set, second_data_set, third_data_set]
 
 
-def populate_list_of_pieces_from_selected_data(selected_data, categories_not_loaded: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None) -> List[list]:
+def populate_list_of_pieces_from_selected_data(selected_data,
+                                               categories_not_loaded: Optional[Union[str, List[str], Tuple[str],
+                                                                                     Set[str]]] = None) -> List[list]:
     correlation_dict = {"Soundtracks": 0, "Songs": 1, "Classical": 2}
     if not isinstance(categories_not_loaded, (str, list, tuple, set)) and categories_not_loaded is not None:
-        raise ValueError(f"Wrong type of 'categories_not_loaded'! Expected str, List[str], Tuple[str], Set[str], got {type(categories_not_loaded)}")
+        raise ValueError(f"Wrong type of 'categories_not_loaded'! Expected str, List[str], Tuple[str], Set[str], "
+                         f"got {type(categories_not_loaded)}")
     if isinstance(categories_not_loaded, str):
         categories_not_loaded = [categories_not_loaded]
-    set_indexes_to_omit = [correlation_dict[category] for category in categories_not_loaded] if categories_not_loaded is not None else []
+    set_indexes_to_omit = [correlation_dict[category] for category in categories_not_loaded] \
+        if categories_not_loaded is not None else []
     list_of_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     for current_set_index, current_set in enumerate(selected_data):
         if current_set_index in set_indexes_to_omit:
@@ -48,7 +55,8 @@ def populate_list_of_pieces_from_selected_data(selected_data, categories_not_loa
     return list_of_pieces
 
 
-def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None,
+def exclude_pieces(list_of_pieces: List[list],
+                   from_composers: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None,
                    with_titles: Optional[Union[str, List[str], Tuple[str], Set[str]]] = None,
                    longer_than: Optional[Union[int, float]] = None, shorter_than: Optional[Union[int, float]] = None):
     if all(parameter is None for parameter in [from_composers, with_titles, longer_than, shorter_than]):
@@ -56,7 +64,8 @@ def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[st
     list_of_indexes = []
     if from_composers is not None:
         if not isinstance(from_composers, (str, list, tuple, set)):
-            raise ValueError(f"Wrong type of 'from_composers'! Expected str, List[str], Tuple[str], Set[str], got {type(from_composers)}")
+            raise ValueError(f"Wrong type of 'from_composers'! Expected str, List[str], Tuple[str], Set[str], "
+                             f"got {type(from_composers)}")
         if isinstance(from_composers, str):
             from_composers = [from_composers]
         for index, composer in enumerate(list_of_pieces[0]):
@@ -64,7 +73,8 @@ def exclude_pieces(list_of_pieces: List[list], from_composers: Optional[Union[st
                 list_of_indexes.append(index)
     if with_titles is not None:
         if not isinstance(with_titles, (str, list, tuple, set)):
-            raise ValueError(f"Wrong type of 'with_titles'! Expected str, List[str], Tuple[str], Set[str], got {type(with_titles)}")
+            raise ValueError(f"Wrong type of 'with_titles'! Expected str, List[str], Tuple[str], Set[str], "
+                             f"got {type(with_titles)}")
         if isinstance(with_titles, str):
             with_titles = [with_titles]
         for index, title in enumerate(list_of_pieces[1]):
@@ -108,7 +118,8 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
     current_duration = 0
     duration_in_seconds = duration*60
     if duration_in_seconds > (list_sum := sum(list_of_pieces[2])*60 + sum(list_of_pieces[3])) - 120:
-        raise ValueError(f"Expected duration ({duration_in_seconds/60} min) bigger, than the sum of all pieces in a list - {list_sum/60} min!")
+        raise ValueError(f"Expected duration ({duration_in_seconds/60} min) bigger, "
+                         f"than the sum of all pieces in a list - {list_sum/60} min!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while current_duration < duration_in_seconds:
@@ -127,7 +138,8 @@ def select_random_subgroup_of_pieces_based_on_duration(list_of_pieces: List[list
 
 def select_random_subgroup_of_pieces_based_on_length(list_of_pieces: List[list], list_length: int):
     if list_length > len(list_of_pieces[0]):
-        raise ValueError(f"Expected number of pieces ({list_length}) bigger, than the number of pieces in a list - {len(list_of_pieces[0])}!")
+        raise ValueError(f"Expected number of pieces ({list_length}) bigger, "
+                         f"than the number of pieces in a list - {len(list_of_pieces[0])}!")
     list_of_selected_pieces = [[] for _ in range(NUMBER_OF_COLUMNS_TO_SAVE)]
     list_of_pieces_copy = copy.deepcopy(list_of_pieces)
     while len(list_of_selected_pieces[0]) != list_length:
@@ -145,9 +157,12 @@ def print_selected_pieces(selected_pieces: List[list]):
     longest_composer_name_length = len(max(selected_pieces[0], key=len))
     longest_piece_name_length = len(max(selected_pieces[1], key=len))
     selected_pieces[0].pop()
-    print("PERFORMER/COMPOSER".ljust(longest_composer_name_length), " ", "TITLE".ljust(longest_piece_name_length), " ", "DURATION")
+    print("PERFORMER/COMPOSER".ljust(longest_composer_name_length), " ",
+          "TITLE".ljust(longest_piece_name_length), " ", "DURATION")
     for piece in range(number_of_pieces):
-        print(selected_pieces[0][piece].ljust(longest_composer_name_length), " ", selected_pieces[1][piece].ljust(longest_piece_name_length), " ", str(selected_pieces[2][piece]) + ":" + str(selected_pieces[3][piece]).rjust(2, "0"))
+        print(selected_pieces[0][piece].ljust(longest_composer_name_length), " ",
+              selected_pieces[1][piece].ljust(longest_piece_name_length), " ",
+              str(selected_pieces[2][piece]) + ":" + str(selected_pieces[3][piece]).rjust(2, "0"))
     duration_in_seconds = sum(selected_pieces[2])*60 + sum(selected_pieces[3])
     print(f"Number of pieces: {number_of_pieces}")
     print(f"Total duration: {duration_in_seconds//60}m {duration_in_seconds%60}s")
